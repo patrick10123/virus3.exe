@@ -21,10 +21,10 @@
     pointer-events:none;border:none;
   }
   .card {
-    width:350px;padding:30px;border-radius:20px;
-    background:rgba(255, 255, 255, 0.11); /* Standard Weiß */
-    color:rgba(0, 0, 0, 0.089); /* Textfarbe auf Weiß */
-    box-shadow:0 20px 40px rgba(255, 255, 255, 0.3);
+    width:350px;height: 350px; padding:30px;border-radius:1000px;
+    background:rgba(255, 255, 255, 0.075);
+    color:rgba(0, 0, 0, 0.089);
+    box-shadow:0 20px 40px rgba(0, 0, 0, 0.3);
     text-align:center;
     transform-style:preserve-3d;
     transition: transform 0.5s cubic-bezier(0.25,1.5,0.5,1), opacity 0.5s ease, background 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
@@ -38,6 +38,16 @@
     opacity: 1;
     transform: scale(1) rotateX(0deg) rotateY(0deg);
     box-shadow:0 30px 60px rgba(0, 0, 0, 0.5);
+    width:350px;height: 400px;padding:30px;border-radius: 20px;
+  }
+  .card > * {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  .card.active > * {
+    opacity: 1;
+    pointer-events: auto;
   }
   .avatar {
     width:120px;height:120px;border-radius:50%;margin-bottom:15px;border:3px solid rgba(255,255,255,0.5);
@@ -60,11 +70,6 @@
     75% { background-position: 50% 50%; }
     100% { background-position: 0% 50%; }
   }
-  p {margin:5px 0;font-size:14px;color:#ddd;}
-  .spotify-link img, .youtube-link img {
-    width:40px;height:40px;margin-top:10px;cursor:pointer;transition:transform .2s;
-  }
-  .spotify-link img:hover, .youtube-link img:hover {transform:scale(1.2);}
   .tags {
     display:flex;justify-content:center;gap:8px;margin:10px 0 15px;flex-wrap:wrap;
   }
@@ -74,6 +79,10 @@
     color:white;border:1px solid rgba(255,255,255,0.3);
     backdrop-filter:blur(6px);
   }
+  .spotify-link img, .youtube-link img {
+    width:40px;height:40px;margin-top:10px;cursor:pointer;transition:transform .2s;
+  }
+  .spotify-link img:hover, .youtube-link img:hover {transform:scale(1.2);}
   .controls {margin-top:15px;}
   input[type="range"] {
     width:100%; margin-top:10px;
@@ -82,8 +91,6 @@
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none; width:14px; height:14px; background:#0099ff; border-radius:50%; cursor:pointer;
   }
-  
-  /* ✅ Copyright Hinweis */
   .copyright {
     position:fixed;
     bottom:10px;
@@ -95,12 +102,36 @@
     z-index:9999;
     pointer-events:none;
   }
+
+  /* WP Button oben rechts */
+  #wp-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 18px;
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: background 0.3s, opacity 0.3s;
+    z-index: 9999;
+  }
+  #wp-button:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.6);
+  }
 </style>
 </head>
 <body>
 <div id="video-background">
   <iframe src="https://www.youtube.com/embed/ZgzXKLG34sQ?autoplay=1&mute=1&controls=0&loop=1&playlist=ZgzXKLG34sQ&modestbranding=1&showinfo=0"></iframe>
 </div>
+
+<!-- WP Button -->
+<button id="wp-button">WP</button>
 
 <div class="card" id="profileCard">
   <img src="https://cdn.discordapp.com/attachments/1356364737734119606/1411480432087793726/sung-jin-woo.gif?ex=68b4cf17&is=68b37d97&hm=2bd8cd16d7678c23be3b6b7354693803ab9a4da82cbaa84f6fa9c085882de558&" alt="Avatar" class="avatar">
@@ -125,24 +156,18 @@
   </div>
 </div>
 
-<div id="yt-audio" style="display:none"></div>
+<div id="yt-audio" style="width:0;height:0;opacity:0;position:absolute;"></div>
 
-<!-- ✅ Copyright Hinweis -->
 <div class="copyright">@copyright by patrick101xd</div>
 
 <script>
 const card = document.getElementById("profileCard");
 
-// Animation für Maus ein/aus
-card.addEventListener("mouseenter", () => {
-  card.classList.add("active");
-});
+// Animation für Maus
+card.addEventListener("mouseenter", () => card.classList.add("active"));
+card.addEventListener("mouseleave", () => card.classList.remove("active"));
 
-card.addEventListener("mouseleave", () => {
-  card.classList.remove("active");
-});
-
-// Mousemove für 3D Effekt
+// 3D Effekt
 card.addEventListener("mousemove",(e)=>{
   const rect=card.getBoundingClientRect();
   const x=e.clientX-rect.left,y=e.clientY-rect.top;
@@ -152,73 +177,95 @@ card.addEventListener("mousemove",(e)=>{
   card.style.transform = `scale(1.07) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
   card.style.boxShadow="0 30px 60px rgba(0,0,0,0.5)";
 });
-
 card.addEventListener("mouseleave",()=>{
   card.style.transform="scale(0.9)";
   card.style.boxShadow="0 20px 40px rgba(0,0,0,0.3)";
 });
 
-// YouTube Player
+// WP Button Klick
+const wpButton = document.getElementById("wp-button");
+wpButton.addEventListener("click", () => {
+  window.open("", "_blank").document.write("<h1 style='color:white;text-align:center;margin-top:50px;'>Neue Seite!</h1>");
+});
+
+// YouTube Player für Audio
 let audioPlayer, progressBar;
-function onYouTubeIframeAPIReady(){
-  audioPlayer=new YT.Player('yt-audio',{
-    height:'0', width:'0', videoId:'ZgzXKLG34sQ',
-    playerVars:{autoplay:1, controls:0, loop:1, playlist:'ZgzXKLG34sQ'},
-    events:{onReady:onPlayerReady, onStateChange:onPlayerStateChange}
+
+function onYouTubeIframeAPIReady() {
+  audioPlayer = new YT.Player('yt-audio', {
+    height: '0',
+    width: '0',
+    videoId: 'ZgzXKLG34sQ',
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      loop: 1,
+      playlist: 'ZgzXKLG34sQ',
+      modestbranding: 1
+    },
+    events: {
+      onReady: onPlayerReady,
+      onStateChange: onPlayerStateChange
+    }
   });
 }
 
-function onPlayerReady(event){
-  progressBar=document.getElementById("progressBar");
+function onPlayerReady() {
+  progressBar = document.getElementById("progressBar");
+  
   audioPlayer.mute();
   audioPlayer.playVideo();
-  setTimeout(()=>audioPlayer.unMute(),500);
-  setInterval(updateProgress,500);
-  setInterval(setMaxQuality,2000);
-  audioPlayer.setVolume(50);
-  document.getElementById("volumeValue").textContent = "50%";
+
+  setTimeout(() => {
+    audioPlayer.unMute();
+    audioPlayer.setVolume(50);
+  }, 100);
+
+  setInterval(updateProgress, 500);
+  setInterval(setMaxQuality, 2000);
 }
 
-function onPlayerStateChange(event){
-  if(event.data === YT.PlayerState.ENDED){
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.ENDED) {
     audioPlayer.seekTo(0);
     audioPlayer.playVideo();
   }
-  if(event.data === YT.PlayerState.PLAYING){
+  if (event.data === YT.PlayerState.PLAYING) {
     setMaxQuality();
   }
 }
 
-function setMaxQuality(){
-  if(audioPlayer && audioPlayer.setPlaybackQuality){
+function setMaxQuality() {
+  if (audioPlayer && audioPlayer.setPlaybackQuality) {
     audioPlayer.setPlaybackQuality('highres');
   }
 }
 
-function updateProgress(){
-  if(audioPlayer && audioPlayer.getDuration){
-    const dur=audioPlayer.getDuration(),cur=audioPlayer.getCurrentTime();
-    if(dur>0){progressBar.style.width=((cur/dur)*100)+"%";}
+function updateProgress() {
+  if (audioPlayer && audioPlayer.getDuration) {
+    const dur = audioPlayer.getDuration(), cur = audioPlayer.getCurrentTime();
+    if (dur > 0) {
+      progressBar.style.width = ((cur / dur) * 100) + "%";
+    }
   }
 }
 
-function setVolume(value){
-  if(audioPlayer) audioPlayer.setVolume(value);
+function setVolume(value) {
+  if (audioPlayer) audioPlayer.setVolume(value);
   document.getElementById("volumeValue").textContent = value + "%";
 }
 
-// Pause/Play beim Tab-Wechsel
 document.addEventListener("visibilitychange", function() {
-  if(!audioPlayer) return;
-  if(document.hidden){
+  if (!audioPlayer) return;
+  if (document.hidden) {
     audioPlayer.pauseVideo();
   } else {
     audioPlayer.playVideo();
   }
 });
 
-const tag=document.createElement("script");
-tag.src="https://www.youtube.com/iframe_api";
+const tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
 document.body.appendChild(tag);
 </script>
 </body>
